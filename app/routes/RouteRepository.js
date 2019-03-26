@@ -43,9 +43,64 @@ self.router.all("*", function (req, res, next) {
 		
 	});
 
+	// START SWIMMING POOL END POINTS
+		//List of SwimmingPools or single SwimmingPool info GET
+		//self.router.get('/swimmingpools',self.passportHandler.passport.authenticate('jwt', { session: false }),function(req,res){
+			self.router.get('/swimmingpools',function(req,res){
+			
+			function showUSwimmingPool(allSwimmingPools){
+				console.log(allSwimmingPools);
+				res.json(allSwimmingPools);
+			}
+	
+			if(req.query.swimmingPoolName == null){
+				var promisedSwimmingPoolList = self.dbSwimmingPoolHandler.getAllSwimmingPool();
+				promisedSwimmingPoolList.then(function(allUsers){
+	
+					showUSwimmingPool(allUsers);
+					
+				}).catch(function(err){
+				console.log(err)})
+				}else{
+	
+					var promisedSwimmingPoolList = self.dbSwimmingPoolHandler.findSwimmingPoolByName(req.query.swimmingPoolName);
+	
+					promisedSwimmingPoolList.then(function(foundSwimmingPool){
+	
+						showUSwimmingPool([foundSwimmingPool]);
+					
+				}).catch(function(err){
+				console.log(err)})
+				}
+	
+	
+		});
+	//Insert Swimming Pool Route POST
+	self.router.post('/swinsert',function(req, res) {
+	
+		var promisedSwimmingPool=self.dbSwimmingPoolHandler.createSwimmingPool(req.body.swimmingPoolName,
+			req.body.swimmingPoolEmail,
+			req.body.swimmingPoolAddress1,
+			req.body.swimmingPoolProvince,
+			req.body.swimmingPoolRegion,
+			req.body.swimmingPoolCountry,
+			req.body.swimmingPoolType);
+			promisedSwimmingPool.then(function(createdSwimmingPool){
+					res.send("User created"+createdSwimmingPool);
+			}
+		).catch(function(err){
+			console.log(err);
+			return res.status(400).send({
+				message: err
+				});
+		
+		});
+	})
+	
+	// END SWIMMING POOL END POINTS
 	
 
-
+// START USER END POINTS
 	//Insert User Page Route POST
   	self.router.post('/insert',function(req, res) {
 	
@@ -110,7 +165,9 @@ self.router.all("*", function (req, res, next) {
 
 	});
 
+// END USER END POINTS
 
+// START AUTHENTICATION END POINTS
 	//Login Page Route POST
 	self.router.post('/login',function(req, res) {
 		console.log("userName "+req.body.userName);
@@ -143,7 +200,9 @@ self.router.all("*", function (req, res, next) {
 		
 	}).catch(function(err){
 	console.log(err)})
-  });
+	});
+	
+	// END AUTHENTICATION END POINTS
 }
 
 class RouteRepository{
@@ -154,6 +213,7 @@ constructor(spider) {
 		this.express				= this.spider.getFunction('express');
 		this.parseurl 				= parseurl;
 		this.dbUsersHandler			= this.spider.getModule('dbUsersHandler');
+		this.dbSwimmingPoolHandler = this.spider.getModule('dbSwimmingPoolHadler');
 		this.passportHandler		= new PassportHandler(this.dbUsersHandler);
 		
 		//Passport configuration
